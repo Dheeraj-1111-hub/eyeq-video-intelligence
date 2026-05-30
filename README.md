@@ -25,7 +25,7 @@ EYEQ is a highly scalable, distributed AI intelligence platform designed to tran
 
 ---
 
-## 🎯 Core Capabilities
+## Core Capabilities
 
 - **Intelligent Video Ingestion:** Upload footage to automatically extract frames and generate baseline analytical metadata.
 - **Semantic Zero-Shot Search:** Leverage CLIP embeddings to search through video history using natural language (e.g., *"person carrying a red backpack"*), bypassing traditional rigid categorization.
@@ -35,7 +35,7 @@ EYEQ is a highly scalable, distributed AI intelligence platform designed to tran
 
 ---
 
-## 🏗️ System Architecture
+## System Architecture
 
 EYEQ is built on a containerized, decoupled microservices architecture designed for high availability and extensive scaling.
 
@@ -101,7 +101,7 @@ graph TD
 
 ---
 
-## 🧠 AI Pipeline Mechanics
+## AI Pipeline Mechanics
 
 <details>
 <summary><strong>View Deep-Dive AI Pipeline Details</strong></summary>
@@ -115,7 +115,7 @@ graph TD
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Docker Compose (Recommended)
 The easiest way to boot the entire microservice architecture is via Docker Compose:
@@ -161,15 +161,11 @@ npm run dev
 
 ---
 
-## 🛡️ Security & Operations
+## Security & Operations
 
 - **Authentication:** Custom JWT authentication with bcrypt password hashing.
 - **RBAC:** Strict Role-Based Access Control enforcing `Investigator`, `Supervisor`, and `Admin` tiers.
 - **Auditing:** Tamper-evident logging of all systemic configurations and case alterations.
 - **Configuration:** All AI thresholds (YOLO confidence, ReID similarity, semantic relevance) are completely user-configurable via the backend database, ensuring EYEQ is a tunable platform, not a black box.
 
----
 
-## 📜 License
-
-Distributed under the MIT License.
