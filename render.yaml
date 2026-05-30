@@ -1,0 +1,50 @@
+services:
+  # Node.js Backend API
+  - type: web
+    name: video-intelligence-backend
+    env: node
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 5000
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRES
+        value: 7d
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: eyeq-redis
+          property: connectionString
+      - key: AI_SERVICE_URL
+        value: https://video-intelligence-ai-service.onrender.com
+
+  # Python FastAPI AI Service
+  - type: web
+    name: video-intelligence-ai-service
+    env: python
+    rootDir: ai-service
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port 8001
+    envVars:
+      - key: AI_SERVICE_PORT
+        value: 8001
+      - key: MONGODB_URI
+        sync: false
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: eyeq-redis
+          property: connectionString
+      - key: BACKEND_URL
+        value: https://video-intelligence-backend.onrender.com
+
+  # Redis for BullMQ Queue
+  - type: redis
+    name: eyeq-redis
+    ipAllowList: [] # only allow internal connections
+    plan: free

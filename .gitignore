@@ -1,0 +1,73 @@
+# Dependencies
+node_modules/
+venv/
+env/
+.env_venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Environment Variables
+.env
+.env.*
+!.env.example
+
+# Uploads & Media (Prevent leaking evidence/videos)
+uploads/
+temp/
+tmp/
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.webm
+*.jpg
+*.jpeg
+*.png
+*.zip
+*.pdf
+!docs/*.png
+!docs/*.jpg
+!frontend/public/*.png
+!frontend/public/*.jpg
+!frontend/src/assets/*
+
+# AI Model Weights & Cache (Heavy files)
+*.weights
+*.cfg
+*.pt
+*.pth
+*.onnx
+.huggingface/
+.cache/
+models/
+
+# Build Output
+dist/
+build/
+.output/
+.next/
+.nuxt/
+coverage/
+.nyc_output/
+
+# IDE & OS
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Logs & Databases
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.sqlite
+*.sqlite3
+*.db

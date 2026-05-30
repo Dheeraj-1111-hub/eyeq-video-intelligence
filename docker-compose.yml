@@ -1,0 +1,71 @@
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: eyeq_redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  mongodb:
+    image: mongo:6.0
+    container_name: eyeq_mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    restart: unless-stopped
+
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: eyeq_ai_service
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./ai-service/static:/app/static
+      - ./uploads:/app/uploads # Share uploads folder for processing
+    environment:
+      - AI_SERVICE_PORT=8001
+    restart: unless-stopped
+    depends_on:
+      - mongodb
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: eyeq_backend
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./uploads:/app/uploads
+    environment:
+      - PORT=5000
+      - MONGODB_URI=mongodb://mongodb:27017/video-intelligence
+      - REDIS_URL=redis://redis:6379
+      - AI_SERVICE_URL=http://ai-service:8001
+      - JWT_SECRET=supersecretjwtkey_for_eyeq_production_deployment
+    restart: unless-stopped
+    depends_on:
+      - mongodb
+      - redis
+      - ai-service
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: eyeq_frontend
+    ports:
+      - "8080:8080"
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:5000
+    restart: unless-stopped
+    depends_on:
+      - backend
+
+volumes:
+  mongodb_data:
