@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { streamText } from "ai";
-import { openai } from "@ai-sdk/openai";
+import { createGroq } from "@ai-sdk/groq";
 import { searchEvidence, trackSubject, createCase, addEvidence, getPlatformStats } from "../services/agent/tools";
 import { AuthRequest } from "../middleware/auth.middleware";
 
@@ -13,12 +13,16 @@ export const chatWithInvestigator = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Messages array is required" });
     }
 
-    if (!process.env.OPENAI_API_KEY) {
-      return res.status(500).json({ error: "OPENAI_API_KEY is not configured on the server." });
+    if (!process.env.GROQ_API_KEY) {
+      return res.status(500).json({ error: "GROQ_API_KEY is not configured on the server." });
     }
 
+    const groq = createGroq({
+      apiKey: process.env.GROQ_API_KEY,
+    });
+
     const result = streamText({
-      model: openai("gpt-4o"),
+      model: groq("llama-3.3-70b-versatile"),
       messages,
       system: `You are the EYEQ Autonomous Investigator, a highly capable forensic AI agent. 
       Your job is to assist security personnel in analyzing CCTV footage, finding suspects, tracking subjects across multiple cameras, and building investigation cases automatically.
