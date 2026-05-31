@@ -10,6 +10,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 
 import appCss from "../styles.css?url";
 import { AppLayout } from "../components/AppLayout";
+import { InvestigatorPanel } from "@/features/investigator/components/InvestigatorPanel";
 
 function NotFoundComponent() {
   return (
@@ -92,6 +93,7 @@ function RootComponent() {
       <QueryClientProvider client={queryClient}>
         <AppLayout>
           <Outlet />
+          <InvestigatorPanel />
         </AppLayout>
       </QueryClientProvider>
     </AuthProvider>
