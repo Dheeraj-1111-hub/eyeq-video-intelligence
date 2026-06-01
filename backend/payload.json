@@ -1,0 +1,5 @@
+{
+  "query": "person carrying a backpack",
+  "semantic_threshold": 0.65,
+  "top_k": 10
+}

@@ -12,6 +12,10 @@ from fastapi.staticfiles import StaticFiles
 from app.routes.process import router as process_router
 from app.routes.search import router as search_router
 
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+from fastapi import Request
+
 load_dotenv()
 
 app = FastAPI(
@@ -34,6 +38,17 @@ app.add_middleware(
 
 app.include_router(process_router)
 app.include_router(search_router)
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    print("============= 422 VALIDATION ERROR =============")
+    print("Errors:", exc.errors())
+    print("Body:", exc.body)
+    print("================================================")
+    return JSONResponse(
+        status_code=422,
+        content={"detail": exc.errors(), "body": exc.body},
+    )
 
 
 @app.get("/health")

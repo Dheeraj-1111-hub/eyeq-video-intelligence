@@ -15,8 +15,7 @@ try:
         loss='softmax',
         pretrained=True
     )
-    # torchreid utility to load weights (market1501 is the standard for person re-identification)
-    torchreid.utils.load_pretrained_weights(model, 'https://drive.google.com/u/0/uc?id=1vUcs4j8-h4d83ZcQ4o5d8jY29a3j_z3P&export=download') # Official OSNet market1501 weights
+    # The build_model(pretrained=True) call already automatically downloads and loads weights
     model.eval()
     
     # Check if GPU is available

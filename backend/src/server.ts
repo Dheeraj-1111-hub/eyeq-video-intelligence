@@ -18,7 +18,6 @@ import adminRoutes from "./routes/admin.routes";
 import notificationRoutes from "./routes/notification.routes";
 import analyticsRoutes from "./routes/analytics.routes";
 import settingsRoutes from "./routes/settings.routes";
-import investigatorRoutes from "./routes/investigator.routes";
 
 dotenv.config();
 
@@ -55,7 +54,6 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/settings", settingsRoutes);
-app.use("/api/investigator", investigatorRoutes);
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI as string)

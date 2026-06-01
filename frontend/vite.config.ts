@@ -12,6 +12,13 @@ export default defineConfig({
     tailwindcss()
   ],
   server: {
-    port: 8080
+    port: 8080,
+    proxy: {
+      "/api/chat": {
+        target: "http://localhost:5000/api/agent/chat",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/chat/, "")
+      }
+    }
   }
 });

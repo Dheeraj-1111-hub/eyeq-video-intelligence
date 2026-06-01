@@ -10,7 +10,6 @@ import { AuthProvider } from "@/contexts/AuthContext";
 
 import appCss from "../styles.css?url";
 import { AppLayout } from "../components/AppLayout";
-import { InvestigatorPanel } from "@/features/investigator/components/InvestigatorPanel";
 
 function NotFoundComponent() {
   return (
@@ -73,15 +72,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="dark">
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        {children}
-        <Scripts />
-      </body>
-    </html>
+    <>
+      {children}
+    </>
   );
 }
 
@@ -93,7 +86,6 @@ function RootComponent() {
       <QueryClientProvider client={queryClient}>
         <AppLayout>
           <Outlet />
-          <InvestigatorPanel />
         </AppLayout>
       </QueryClientProvider>
     </AuthProvider>

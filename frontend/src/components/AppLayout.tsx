@@ -1,5 +1,5 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
-import { LayoutGrid, Search, FolderOpen, BarChart3, Settings, Upload, Eye, Cpu, Layers, Sparkles, Video, Settings2, Clock, User, Zap, Languages } from "lucide-react";
+import { LayoutGrid, Search, FolderOpen, BarChart3, Settings, Upload, Eye, Cpu, Layers, Sparkles, Video, Settings2, Clock, User, Zap, Languages, Bot } from "lucide-react";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -187,6 +187,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         </header>
 
         <main className="min-w-0 flex-1 overflow-hidden relative">{children}</main>
+        
       </div>
     </div>
     </SignedIn>
