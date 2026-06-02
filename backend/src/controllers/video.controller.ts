@@ -63,6 +63,7 @@ export const uploadVideo = async (req: Request, res: Response): Promise<void> =>
         duration,
         fps,
         resolution,
+        location: req.body.location || "Unknown",
         status: "queued",
         uploadedBy: userId
       });

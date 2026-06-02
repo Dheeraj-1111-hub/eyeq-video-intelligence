@@ -21,6 +21,7 @@ export function UploadDialog({ open, onOpenChange, onUploadSuccess }: UploadDial
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [progress, setProgress] = useState(0);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [location, setLocation] = useState("");
   const uploadMutation = useUploadVideo();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,11 +38,13 @@ export function UploadDialog({ open, onOpenChange, onUploadSuccess }: UploadDial
     uploadMutation.mutate(
       {
         file: selectedFile,
+        location: location.trim() || undefined,
         onProgress: (p) => setProgress(p),
       },
       {
         onSuccess: (data) => {
           setSelectedFile(null);
+          setLocation("");
           setProgress(0);
           onOpenChange(false);
           if (onUploadSuccess) {
@@ -58,6 +61,7 @@ export function UploadDialog({ open, onOpenChange, onUploadSuccess }: UploadDial
   const handleClose = () => {
     if (uploadMutation.isPending) return; // Prevent closing while uploading
     setSelectedFile(null);
+    setLocation("");
     setProgress(0);
     onOpenChange(false);
   };
@@ -114,6 +118,18 @@ export function UploadDialog({ open, onOpenChange, onUploadSuccess }: UploadDial
                   Upload failed. Please try again.
                 </div>
               )}
+
+              <div className="space-y-1.5 pt-2">
+                <label className="text-xs text-zinc-400 font-medium">Camera Location (Optional)</label>
+                <input
+                  type="text"
+                  placeholder="e.g., Lobby, Parking, Entrance"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-md px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-cyan"
+                  disabled={uploadMutation.isPending}
+                />
+              </div>
             </div>
           )}
 

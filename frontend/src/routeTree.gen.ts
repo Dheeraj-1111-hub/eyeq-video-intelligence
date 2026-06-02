@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SearchRouteImport } from './routes/search'
+import { Route as IntelligenceRouteImport } from './routes/intelligence'
 import { Route as CasesRouteImport } from './routes/cases'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -24,6 +25,11 @@ const SettingsRoute = SettingsRouteImport.update({
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
   path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IntelligenceRoute = IntelligenceRouteImport.update({
+  id: '/intelligence',
+  path: '/intelligence',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CasesRoute = CasesRouteImport.update({
@@ -52,6 +58,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/analytics': typeof AnalyticsRoute
   '/cases': typeof CasesRoute
+  '/intelligence': typeof IntelligenceRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
 }
@@ -60,6 +67,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/analytics': typeof AnalyticsRoute
   '/cases': typeof CasesRoute
+  '/intelligence': typeof IntelligenceRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
 }
@@ -69,20 +77,36 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/analytics': typeof AnalyticsRoute
   '/cases': typeof CasesRoute
+  '/intelligence': typeof IntelligenceRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/analytics' | '/cases' | '/search' | '/settings'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/analytics'
+    | '/cases'
+    | '/intelligence'
+    | '/search'
+    | '/settings'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/analytics' | '/cases' | '/search' | '/settings'
+  to:
+    | '/'
+    | '/admin'
+    | '/analytics'
+    | '/cases'
+    | '/intelligence'
+    | '/search'
+    | '/settings'
   id:
     | '__root__'
     | '/'
     | '/admin'
     | '/analytics'
     | '/cases'
+    | '/intelligence'
     | '/search'
     | '/settings'
   fileRoutesById: FileRoutesById
@@ -92,6 +116,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   AnalyticsRoute: typeof AnalyticsRoute
   CasesRoute: typeof CasesRoute
+  IntelligenceRoute: typeof IntelligenceRoute
   SearchRoute: typeof SearchRoute
   SettingsRoute: typeof SettingsRoute
 }
@@ -110,6 +135,13 @@ declare module '@tanstack/react-router' {
       path: '/search'
       fullPath: '/search'
       preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/intelligence': {
+      id: '/intelligence'
+      path: '/intelligence'
+      fullPath: '/intelligence'
+      preLoaderRoute: typeof IntelligenceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cases': {
@@ -148,6 +180,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   AnalyticsRoute: AnalyticsRoute,
   CasesRoute: CasesRoute,
+  IntelligenceRoute: IntelligenceRoute,
   SearchRoute: SearchRoute,
   SettingsRoute: SettingsRoute,
 }

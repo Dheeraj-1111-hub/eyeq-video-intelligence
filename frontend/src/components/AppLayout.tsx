@@ -15,6 +15,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 const nav = [
   { to: "/", label: "Workspace", icon: LayoutGrid },
+  { to: "/intelligence", label: "Intelligence", icon: Zap },
   { to: "/search", label: "Search", icon: Search },
   { to: "/cases", label: "Cases", icon: FolderOpen },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
@@ -23,6 +24,7 @@ const nav = [
 
 const titles: Record<string, string> = {
   "/": "Apartment Investigation Workspace",
+  "/intelligence": "Intelligence Command Center",
   "/search": "Search",
   "/cases": "Cases",
   "/analytics": "Analytics",

@@ -12,9 +12,12 @@ export const videoApi = {
     return data;
   },
 
-  async uploadVideo(file: File, onProgress?: (progress: number) => void): Promise<Video> {
+  async uploadVideo(file: File, location?: string, onProgress?: (progress: number) => void): Promise<Video> {
     const formData = new FormData();
     formData.append("video_file", file);
+    if (location) {
+      formData.append("location", location);
+    }
 
     const { data } = await api.post<Video>("/videos/upload", formData, {
       onUploadProgress: (progressEvent) => {

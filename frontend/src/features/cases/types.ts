@@ -18,6 +18,7 @@ export interface Evidence {
   caseId: string;
   videoId: string;
   videoFilename: string;
+  videoLocation?: string;
   detectionId: string;
   timestamp: string;
   timestampSeconds: number;

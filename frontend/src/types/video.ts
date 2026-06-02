@@ -7,6 +7,7 @@ export interface Video {
   duration: number;
   fps: number;
   resolution: string;
+  location?: string;
   status: "queued" | "processing" | "indexed" | "failed";
   uploadedBy: string;
   createdAt: string;

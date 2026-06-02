@@ -3,6 +3,7 @@ import Case from "../models/Case";
 import Evidence from "../models/Evidence";
 import TimelineEvent from "../models/TimelineEvent";
 import CaseNote from "../models/CaseNote";
+import Video from "../models/Video";
 import Notification from "../models/Notification";
 import UserSettings from "../models/UserSettings";
 import { generateCaseSummary } from "../services/summary.service";
@@ -52,9 +53,18 @@ export const getCaseDetails = async (req: Request, res: Response) => {
     const caseData = await Case.findById(id);
     if (!caseData) return res.status(404).json({ error: "Case not found" });
 
-    const evidence = await Evidence.find({ caseId: id }).sort({ timestampSeconds: 1 });
+    const evidenceDocs = await Evidence.find({ caseId: id }).sort({ timestampSeconds: 1 }).lean();
     const timeline = await TimelineEvent.find({ caseId: id }).sort({ timestampSeconds: 1 });
     const notes = await CaseNote.find({ caseId: id }).sort({ createdAt: -1 }).populate("userId", "name email");
+
+    // Attach video locations to evidence
+    const evidence = await Promise.all(evidenceDocs.map(async (ev) => {
+      const video = await Video.findById(ev.videoId).select("location").lean();
+      return {
+        ...ev,
+        videoLocation: video?.location || "Unknown"
+      };
+    }));
 
     // Generate summary on the fly
     const summary = generateCaseSummary(timeline);
