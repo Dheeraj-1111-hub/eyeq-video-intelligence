@@ -67,6 +67,11 @@ export const fetchAdminMetrics = async () => {
   return data;
 };
 
+export const fetchDashboardMetrics = async () => {
+  const { data } = await api.get("/dashboard/metrics");
+  return data;
+};
+
 export const fetchAdminStorage = async () => {
   const { data } = await api.get("/admin/storage");
   return data;

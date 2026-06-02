@@ -14,6 +14,7 @@ import UserSettings from "../models/UserSettings";
 import { videoQueue, addVideoJob } from "../queue/video.queue";
 import { getIo } from "../socket";
 import { logAuditAction } from "../services/audit.service";
+import { triggerDetectiveScan } from "../services/detective.service";
 
 // Configure fluent-ffmpeg to use the locally installed binaries
 ffmpeg.setFfmpegPath(ffmpegInstaller.path);
@@ -316,6 +317,11 @@ export const updateVideoProgress = async (req: Request, res: Response): Promise<
           frameCount, // approximation based on detections if actual frame count is not readily available
           detections: frameCount,
           embeddings: frameCount // each detection has an embedding
+        });
+
+        // Trigger autonomous detective AI scan
+        triggerDetectiveScan(id).catch(err => {
+          console.error("Failed to run detective scan:", err);
         });
       }
     }

@@ -12,18 +12,20 @@ import { SignedIn, SignedOut, SignIn, SignUp, UserButton } from "@/components/au
 import { UploadDialog } from "@/components/workspace/UploadDialog";
 import { NotificationBell } from "@/components/layout/NotificationBell";
 import { useAuth } from "@/hooks/useAuth";
+import { CopilotWidget } from "@/components/workspace/CopilotWidget";
 
 const nav = [
-  { to: "/", label: "Workspace", icon: LayoutGrid },
-  { to: "/intelligence", label: "Intelligence", icon: Zap },
-  { to: "/search", label: "Search", icon: Search },
-  { to: "/cases", label: "Cases", icon: FolderOpen },
+  { to: "/", label: "Dashboard", icon: LayoutGrid },
+  { to: "/analyze", label: "Video Analysis", icon: Video },
+  { to: "/search", label: "Global Search", icon: Search },
+  { to: "/cases", label: "Case Intelligence", icon: FolderOpen },
   { to: "/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/settings", label: "Settings", icon: Settings },
 ];
 
 const titles: Record<string, string> = {
-  "/": "Apartment Investigation Workspace",
+  "/": "Global Command Center",
+  "/analyze": "Video Analysis Workspace",
   "/intelligence": "Intelligence Command Center",
   "/search": "Search",
   "/cases": "Cases",
@@ -53,6 +55,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
       open={isUploadOpen} 
       onOpenChange={setIsUploadOpen} 
     />
+    <CopilotWidget />
     <SignedIn>
     <div className="flex min-h-screen bg-background text-foreground selection:bg-primary/30 relative overflow-hidden">
       <div className="absolute inset-0 z-0 opacity-[0.03] pointer-events-none mix-blend-screen">

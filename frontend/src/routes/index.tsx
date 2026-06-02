@@ -1,391 +1,219 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
-  FileDown,
-  FolderPlus,
-  FileText,
   UploadCloud,
-  Database,
-  Cpu,
-  Clock,
   Search,
-  Loader2,
+  FolderOpen,
+  Activity,
+  ShieldCheck,
+  Video,
+  ArrowRight,
+  PlayCircle
 } from "lucide-react";
-import { fetchSummary, fetchPipelineStatus, exportEvidence, generateReport } from "../lib/api";
-import { useVideos } from "../hooks/useVideos";
-import { useVideoDetections } from "../hooks/useVideoDetections";
-import { VideoLibrary } from "@/components/workspace/VideoLibrary";
-import { VideoPlayer } from "@/components/workspace/VideoPlayer";
-import { PipelineStep } from "@/components/workspace/ProcessingStatus";
+import { DetectiveFeed } from "@/components/dashboard/DetectiveFeed";
 import { UploadDialog } from "@/components/workspace/UploadDialog";
-import { DetectionStats } from "@/components/workspace/DetectionStats";
-import { DetectionTimeline } from "@/components/workspace/DetectionTimeline";
-import { Meteors } from "@/components/ui/aceternity/meteors";
-import { CreateCaseModal } from "@/features/cases/components/CreateCaseModal";
-import { io } from "socket.io-client";
-
-// Shadcn UI Imports
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { ResizableLayout } from "@/components/ui/custom-resizable";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-
-import { useAuth } from "../hooks/useAuth";
-import type { Detection, VideoSummary } from "@/types/video";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { fetchDashboardMetrics } from "@/lib/api";
 
 export const Route = createFileRoute("/")({
-  head: () => ({ meta: [{ title: "Workspace — EYEQ" }] }),
-  component: Workspace,
+  head: () => ({ meta: [{ title: "Global Command Center — EYEQ" }] }),
+  component: Dashboard,
 });
 
-function Workspace() {
+function Dashboard() {
   const navigate = useNavigate();
-  const { token } = useAuth();
-  const [selected, setSelected] = useState<string | null>(null);
-  const [playing, setPlaying] = useState(false);
-  const [showOverlays, setShowOverlays] = useState(true);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [currentTime, setCurrentTime] = useState(0);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
-  const [isCreateCaseOpen, setIsCreateCaseOpen] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
-  
-  // Real-time progress state
-  const [liveProgress, setLiveProgress] = useState<{ progress: number, message: string } | null>(null);
 
-  // Queries
-  const { data: videos = [], isLoading: isLoadingVideos } = useVideos();
-
-  const activeId = selected || (videos.length > 0 ? videos[0]._id : null);
-  const active = videos.find((v: any) => v._id === activeId);
-
-  const { data: pipeline = { frames_extracted: false, objects_detected: false, embeddings_generated: false, indexed: false } } = useQuery({
-    queryKey: ["pipeline", activeId],
-    queryFn: () => fetchPipelineStatus(activeId!),
-    enabled: !!activeId,
-    refetchInterval: (active?.status === "queued" || active?.status === "processing") ? 3000 : false,
+  // Fetch some quick stats
+  const { data: stats } = useQuery({
+    queryKey: ["dashboardMetrics"],
+    queryFn: fetchDashboardMetrics
   });
-
-  const { detections, detectionsBySecond, stats } = useVideoDetections(
-    activeId,
-    active?.status === "indexed"
-  );
-
-  const { data: summary } = useQuery<VideoSummary>({
-    queryKey: ["summary", activeId],
-    queryFn: () => fetchSummary(activeId!),
-    enabled: !!activeId && active?.status === "indexed",
-  });
-
-  // Sync playing state with video element
-  useEffect(() => {
-    if (videoRef.current) {
-      if (playing) videoRef.current.play().catch(() => {});
-      else videoRef.current.pause();
-    }
-  }, [playing]);
-
-  const handleTimeUpdate = () => {
-    if (videoRef.current) {
-      setCurrentTime(videoRef.current.currentTime);
-    }
-  };
-
-  const jumpToTime = (seconds: number) => {
-    if (videoRef.current) {
-      videoRef.current.currentTime = seconds;
-      setPlaying(true);
-    }
-  };
-
-  const handleExportEvidence = async () => {
-    if (!activeId || !active) return;
-    try {
-      setIsExporting(true);
-      const blob = await exportEvidence(activeId);
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${active.originalName}_Evidence.zip`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsExporting(false);
-    }
-  };
-
-  const handleGenerateReport = async () => {
-    if (!activeId || !active) return;
-    try {
-      setIsGenerating(true);
-      const blob = await generateReport(activeId);
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${active.originalName}_Report.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  // Socket.IO for real-time progress
-  useEffect(() => {
-    if (!activeId || active?.status !== "processing") {
-      setLiveProgress(null);
-      return;
-    }
-
-    const socket = io(import.meta.env.VITE_API_URL || "http://localhost:5000", {
-      auth: { token },
-      transports: ["websocket"]
-    });
-
-    socket.on("connect", () => {
-      socket.emit("join_video", activeId);
-    });
-
-    socket.on("video_progress", (data: { videoId: string, progress: number, message: string }) => {
-      if (data.videoId === activeId) {
-        setLiveProgress({ progress: data.progress, message: data.message });
-      }
-    });
-
-    return () => {
-      socket.disconnect();
-    };
-  }, [activeId, active?.status, token]);
-
-  // Detections handling moved to useVideoDetections hook and HTML5 Canvas
 
   return (
-    <ResizableLayout
-      defaultLeftWidth={280}
-      defaultRightWidth={340}
-      leftPanel={
-        <>
-          <UploadDialog
-            open={isUploadOpen}
-            onOpenChange={setIsUploadOpen}
-            onUploadSuccess={(id) => setSelected(id)}
-          />
-          <div className="p-4 flex flex-col gap-4 border-b bg-background">
-            <Button
-              onClick={() => setIsUploadOpen(true)}
-              className="w-full bg-white text-black hover:bg-brand-cyan font-semibold transition-colors"
-            >
-              <UploadCloud className="mr-2 h-4 w-4" />
-              Upload Footage
-            </Button>
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold tracking-tight text-white/90">Footage Library</h2>
-              <span className="text-xs text-muted-foreground font-mono">{videos.length} files</span>
+    <div className="flex-1 flex flex-col bg-background relative overflow-hidden">
+      <UploadDialog
+        open={isUploadOpen}
+        onOpenChange={setIsUploadOpen}
+        onUploadSuccess={(id) => navigate({ to: '/analyze', search: { active: id } })}
+      />
+
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-brand-cyan/5 via-background to-background pointer-events-none" />
+
+      <ScrollArea className="flex-1">
+        <div className="max-w-6xl mx-auto w-full p-8 space-y-10">
+          
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight text-white mb-2">Global Command Center</h1>
+              <p className="text-muted-foreground text-sm max-w-xl">
+                Monitor autonomous threat detection, manage active investigations, and analyze new surveillance footage.
+              </p>
+            </div>
+            <div className="flex gap-4">
+              <Button 
+                onClick={() => navigate({ to: "/search" })}
+                variant="outline" 
+                className="bg-black/50 border-white/10 hover:bg-white/10 hover:text-white"
+              >
+                <Search className="w-4 h-4 mr-2" />
+                Global Search
+              </Button>
+              <Button 
+                onClick={() => setIsUploadOpen(true)}
+                className="bg-brand-cyan text-black hover:bg-brand-cyan/80 font-semibold shadow-[0_0_20px_rgba(30,212,237,0.3)]"
+              >
+                <UploadCloud className="w-4 h-4 mr-2" />
+                Ingest Footage
+              </Button>
             </div>
           </div>
-          <VideoLibrary
-            videos={videos}
-            isLoadingVideos={isLoadingVideos}
-            activeId={activeId}
-            setSelected={setSelected}
-            setPlaying={setPlaying}
-          />
-        </>
-      }
-      centerPanel={
-        active ? (
-          <>
-            {/* Header info */}
-            <div className="p-4 border-b flex items-center justify-between bg-background">
-              <div>
-                <h3 className="text-sm font-semibold text-white/90">{active.filename}</h3>
-                <p className="text-xs font-mono text-muted-foreground mt-0.5">
-                  {new Date(active.createdAt).toLocaleString()}
-                </p>
-              </div>
-              <div className="flex items-center space-x-3">
-                <div className="flex items-center space-x-2 bg-zinc-900/50 px-3 py-1.5 rounded-full border border-zinc-800">
-                  <Switch
-                    id="overlays"
-                    checked={showOverlays}
-                    onCheckedChange={setShowOverlays}
-                    className="data-[state=checked]:bg-brand-cyan"
-                  />
-                  <Label htmlFor="overlays" className="text-xs font-medium text-white/80 cursor-pointer">
-                    Object Overlays
-                  </Label>
+
+          {/* Top Metrics Row */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <MetricCard 
+              icon={<FolderOpen className="w-5 h-5 text-brand-cyan" />}
+              label="Active Case Files"
+              value={stats?.cases?.count ?? 0}
+              trend={stats?.cases?.trend ?? "0 this week"}
+            />
+            <MetricCard 
+              icon={<Video className="w-5 h-5 text-brand-purple" />}
+              label="Footage Indexed"
+              value={stats?.footage?.count ?? 0}
+              trend={stats?.footage?.trend ?? "0 Bytes Processed"}
+            />
+            <MetricCard 
+              icon={<ShieldCheck className={`w-5 h-5 ${stats?.health?.status === 'Optimal' ? 'text-emerald-500' : 'text-brand-amber'}`} />}
+              label="System Health"
+              value={stats?.health?.status ?? "Checking"}
+              trend={stats?.health?.detail ?? "Connecting to AI Engine..."}
+            />
+            <MetricCard 
+              icon={<Activity className={`w-5 h-5 ${stats?.alerts?.count > 0 ? 'text-rose-500' : 'text-zinc-500'}`} />}
+              label="Threat Alerts"
+              value={stats?.alerts?.count ?? 0}
+              trend={stats?.alerts?.trend ?? "0 unread"}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Left Column: Detective Feed */}
+            <div className="lg:col-span-2 space-y-6">
+              <DetectiveFeed />
+              
+              {/* Quick Jump to Video Analysis */}
+              <div className="bg-zinc-900/40 border border-zinc-800/50 rounded-xl p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-semibold text-white/90">Recent Video Activity</h3>
+                  <Button variant="ghost" size="sm" onClick={() => navigate({ to: '/analyze' })} className="text-brand-cyan hover:text-brand-cyan/80 hover:bg-brand-cyan/10">
+                    Open Workspace <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
                 </div>
+                
+                {stats?.recentVideos && stats.recentVideos.length > 0 ? (
+                  <div className="space-y-3">
+                    {stats.recentVideos.map((video: any) => (
+                      <div 
+                        key={video._id} 
+                        onClick={() => navigate({ to: '/analyze', search: { active: video._id } })}
+                        className="bg-black/40 border border-white/5 rounded-lg p-4 flex items-center justify-between cursor-pointer hover:border-brand-cyan/50 hover:bg-black/60 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded bg-brand-cyan/10 flex items-center justify-center">
+                            <PlayCircle className="w-5 h-5 text-brand-cyan" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-white">{video.originalName}</p>
+                            <p className="text-xs text-muted-foreground">{new Date(video.createdAt).toLocaleDateString()}</p>
+                          </div>
+                        </div>
+                        <span className={`text-[10px] uppercase font-bold tracking-wider px-2 py-1 rounded border ${video.status === 'indexed' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-brand-amber/10 text-brand-amber border-brand-amber/20'}`}>
+                          {video.status}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-xs text-muted-foreground max-w-lg mb-6">
+                      Manually scrub through processed footage, view frame-by-frame object detections, and track subject paths chronologically.
+                    </p>
+                    <div className="aspect-[21/9] bg-zinc-950 rounded-lg border border-white/5 relative overflow-hidden group cursor-pointer" onClick={() => navigate({ to: '/analyze' })}>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <Video className="w-8 h-8 text-zinc-700 group-hover:text-brand-cyan transition-colors" />
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
-            <ScrollArea className="flex-1 bg-zinc-950/50">
-              <div className="p-6 max-w-5xl mx-auto w-full space-y-8">
-
-                {/* Video Player */}
-                <div className="space-y-4">
-                  <VideoPlayer
-                    active={active}
-                    token={token}
-                    videoRef={videoRef}
-                    showOverlays={showOverlays}
-                    detectionsBySecond={detectionsBySecond}
-                    isPlaying={playing}
-                    onTimeUpdate={handleTimeUpdate}
-                    onPlay={() => setPlaying(true)}
-                    onPause={() => setPlaying(false)}
-                  />
+            {/* Right Column: Recent Cases */}
+            <div className="space-y-6">
+              <div className="bg-zinc-900/40 border border-zinc-800/50 rounded-xl p-6 h-full min-h-[500px]">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-sm font-semibold text-white/90">Active Investigations</h3>
+                  <Button variant="ghost" size="sm" onClick={() => navigate({ to: '/cases' })} className="text-muted-foreground hover:text-white">
+                    View All
+                  </Button>
                 </div>
-
-                {/* Pipeline + Timeline Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-                  {/* Processing Pipeline */}
-                  <div className="bg-zinc-900/40 border border-zinc-800/50 rounded-xl p-5">
-                    <h4 className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-5 flex items-center gap-2">
-                      <Database className="h-4 w-4" /> Processing Pipeline
-                    </h4>
-                    <div className="space-y-4 ml-1 relative before:absolute before:inset-0 before:ml-3 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-brand-cyan/20 before:via-brand-cyan/20 before:to-transparent">
-                      <PipelineStep label="Video Uploaded" done={true} />
-                      <PipelineStep label="Frames Extracted" done={pipeline.frames_extracted} active={active.status === "processing" && !pipeline.frames_extracted} />
-                      <PipelineStep label="Objects Detected" done={pipeline.objects_detected} active={pipeline.frames_extracted && !pipeline.objects_detected} />
-                      <PipelineStep label="Embeddings Generated" done={pipeline.embeddings_generated} active={pipeline.objects_detected && !pipeline.embeddings_generated} />
-                      <PipelineStep label="Search Index Ready" done={pipeline.indexed} active={pipeline.embeddings_generated && !pipeline.indexed} />
-                    </div>
-                    {liveProgress && active.status === "processing" && (
-                      <div className="mt-6 pt-4 border-t border-zinc-800/50">
-                        <div className="flex justify-between text-xs mb-2">
-                          <span className="text-brand-cyan font-medium">{liveProgress.message}</span>
-                          <span className="text-zinc-400">{liveProgress.progress}%</span>
-                        </div>
-                        <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-brand-cyan transition-all duration-500 ease-out" 
-                            style={{ width: `${liveProgress.progress}%` }} 
-                          />
+                
+                {stats?.recentCases && stats.recentCases.length > 0 ? (
+                  <div className="space-y-4">
+                    {stats.recentCases.map((c: any) => (
+                      <div 
+                        key={c._id}
+                        onClick={() => navigate({ to: '/cases', search: { selectedId: c._id } })}
+                        className="p-4 rounded-lg border border-white/5 bg-black/40 hover:bg-black/60 hover:border-white/10 cursor-pointer transition-colors"
+                      >
+                        <h4 className="text-sm font-semibold text-white mb-2">{c.title}</h4>
+                        <div className="flex justify-between items-center text-xs">
+                          <span className={`px-2 py-0.5 rounded border ${c.priority === 'Critical' ? 'bg-rose-500/20 text-rose-400 border-rose-500/30' : 'bg-white/5 text-muted-foreground border-white/10'}`}>
+                            {c.priority}
+                          </span>
+                          <span className="text-muted-foreground">{new Date(c.createdAt).toLocaleDateString()}</span>
                         </div>
                       </div>
-                    )}
+                    ))}
                   </div>
-
-                  {/* Detection Timeline */}
-                  <div className="bg-zinc-900/40 border border-zinc-800/50 rounded-xl p-5 flex flex-col h-full max-h-[300px]">
-                    <h4 className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-4 flex items-center gap-2">
-                      <Clock className="h-4 w-4" /> Detection Timeline
-                    </h4>
-                    <DetectionTimeline
-                      detections={detections}
-                      status={active.status}
-                      onJumpToTime={jumpToTime}
-                      currentTime={currentTime}
-                    />
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-[300px] text-center">
+                    <FolderOpen className="w-8 h-8 text-zinc-700 mb-3" />
+                    <p className="text-sm text-zinc-400">No active cases found.</p>
+                    <Button className="mt-6 bg-white/5 border border-white/10 text-white hover:bg-white/10" onClick={() => navigate({ to: '/cases' })}>
+                      Create New Case
+                    </Button>
                   </div>
-
-                </div>
+                )}
               </div>
-            </ScrollArea>
-          </>
-        ) : (
-          <div className="flex-1 flex items-center justify-center text-zinc-500">
-            Upload footage to begin investigation.
-          </div>
-        )
-      }
-      rightPanel={
-        <>
-          <div className="absolute top-0 left-0 right-0 h-40 overflow-hidden pointer-events-none opacity-[0.08] mix-blend-screen">
-            <Meteors number={10} />
-          </div>
-
-          <div className="p-4 border-b bg-background relative z-10">
-            <h2 className="text-sm font-semibold tracking-tight text-white flex items-center gap-2">
-              <Cpu className="h-4 w-4 text-brand-cyan" />
-              Footage Intelligence
-            </h2>
-          </div>
-
-          <ScrollArea className="flex-1 relative z-10">
-            <div className="p-4 space-y-6">
-
-              {!active ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center space-y-3">
-                  <Database className="h-8 w-8 text-zinc-700" />
-                  <p className="text-sm text-zinc-500">
-                    Upload footage to see intelligence metrics and actions.
-                  </p>
-                </div>
-              ) : (
-                <>
-                  {/* Real Detection Stats */}
-                  <DetectionStats
-                    summary={summary}
-                    advancedStats={stats}
-                    status={active.status}
-                  />
-
-                  <Separator className="bg-border" />
-
-                  {/* Actions */}
-                  <div className="space-y-3">
-                    <div className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-2">
-                      Actions
-                    </div>
-                    <Button 
-                      onClick={() => navigate({ to: "/search", search: { videoId: activeId } })}
-                      variant="outline" 
-                      className="w-full justify-start border-brand-cyan/30 bg-brand-cyan/10 text-brand-cyan hover:bg-brand-cyan hover:text-black transition-colors h-11"
-                    >
-                      <Search className="mr-3 h-4 w-4" />
-                      Search Footage
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      className="w-full justify-start border-white/10 hover:bg-white/5 hover:text-white transition-colors h-11"
-                      onClick={() => setIsCreateCaseOpen(true)}
-                    >
-                      <FolderPlus className="mr-3 h-4 w-4 text-muted-foreground" />
-                      Create Case File
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      className="w-full justify-start border-white/10 hover:bg-white/5 hover:text-white transition-colors h-11 disabled:opacity-50" 
-                      disabled={isExporting}
-                      onClick={handleExportEvidence}
-                    >
-                      {isExporting ? <Loader2 className="mr-3 h-4 w-4 animate-spin text-brand-cyan" /> : <FileDown className="mr-3 h-4 w-4 text-muted-foreground" />}
-                      {isExporting ? "Bundling ZIP..." : "Export Evidence"}
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      className="w-full justify-start border-white/10 hover:bg-white/5 hover:text-white transition-colors h-11 disabled:opacity-50" 
-                      disabled={isGenerating}
-                      onClick={handleGenerateReport}
-                    >
-                      {isGenerating ? <Loader2 className="mr-3 h-4 w-4 animate-spin text-brand-cyan" /> : <FileText className="mr-3 h-4 w-4 text-muted-foreground" />}
-                      {isGenerating ? "Generating PDF..." : "Generate Report"}
-                    </Button>
-                  </div>
-                </>
-              )}
-
             </div>
-          </ScrollArea>
-          
-          <CreateCaseModal 
-            isOpen={isCreateCaseOpen}
-            onClose={() => setIsCreateCaseOpen(false)}
-          />
-        </>
-      }
-    />
+          </div>
+
+        </div>
+      </ScrollArea>
+    </div>
+  );
+}
+
+function MetricCard({ icon, label, value, trend }: { icon: React.ReactNode; label: string; value: string | number; trend: string }) {
+  return (
+    <div className="bg-zinc-900/40 border border-zinc-800/50 rounded-xl p-5 hover:bg-zinc-900/60 transition-colors">
+      <div className="flex justify-between items-start mb-4">
+        <div className="p-2 bg-black/40 rounded-lg border border-white/5">
+          {icon}
+        </div>
+      </div>
+      <div>
+        <h4 className="text-2xl font-bold text-white tracking-tight mb-1">{value}</h4>
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider">{label}</span>
+          <span className="text-[10px] text-muted-foreground">{trend}</span>
+        </div>
+      </div>
+    </div>
   );
 }

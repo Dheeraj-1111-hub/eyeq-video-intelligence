@@ -135,16 +135,25 @@ function CasesPage() {
                   </div>
                 </div>
                 
-                <select 
-                  className="bg-black border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-brand-cyan"
-                  value={details.case.status}
-                  onChange={(e) => handleStatusChange(e.target.value)}
-                >
-                  <option value="Open">Open</option>
-                  <option value="Under Investigation">Under Investigation</option>
-                  <option value="Review">Review</option>
-                  <option value="Closed">Closed</option>
-                </select>
+                <div className="flex items-center gap-3">
+                  <Button 
+                    onClick={() => window.location.href = `/intelligence?caseId=${details.case._id}`}
+                    className="bg-brand-purple text-white hover:bg-brand-purple/90 border-0 h-9 text-xs"
+                  >
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    Launch Intelligence
+                  </Button>
+                  <select 
+                    className="bg-black border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-brand-cyan h-9"
+                    value={details.case.status}
+                    onChange={(e) => handleStatusChange(e.target.value)}
+                  >
+                    <option value="Open">Open</option>
+                    <option value="Under Investigation">Under Investigation</option>
+                    <option value="Review">Review</option>
+                    <option value="Closed">Closed</option>
+                  </select>
+                </div>
               </div>
 
               {/* Tabs */}
