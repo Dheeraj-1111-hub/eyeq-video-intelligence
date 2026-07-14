@@ -320,7 +320,7 @@ export const updateVideoProgress = async (req: Request, res: Response): Promise<
         });
 
         // Trigger autonomous detective AI scan
-        triggerDetectiveScan(id).catch(err => {
+        triggerDetectiveScan(id as string).catch(err => {
           console.error("Failed to run detective scan:", err);
         });
       }

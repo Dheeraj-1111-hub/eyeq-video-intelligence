@@ -175,7 +175,7 @@ export const generateReportHtml = (
   <h2>Evidence Log</h2>
   <div class="evidence-grid">
     ${evidence.length > 0 ? evidence.map((e, index) => {
-      const base64Img = getBase64Image(e.thumbnailPath);
+      const base64Img = getBase64Image(e.thumbnailPath || "");
       return `
       <div class="evidence-card">
         <div class="evidence-img-container">

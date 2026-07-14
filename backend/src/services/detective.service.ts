@@ -4,7 +4,7 @@ import Detection from "../models/Detection";
 import Case from "../models/Case";
 import Video from "../models/Video";
 import Notification from "../models/Notification";
-import { getIO } from "../socket";
+import { getIo } from "../socket";
 
 // Cosine Similarity between two vectors
 const cosineSimilarity = (vecA: number[], vecB: number[]): number => {
@@ -94,13 +94,13 @@ export const triggerDetectiveScan = async (newVideoId: string) => {
               userId: caseData.uploadedBy, // Send to case owner
               title: "Detective AI Match",
               message: msg,
-              type: "alert",
+              type: "warning",
               read: false,
               link: `/intelligence?caseId=${caseData._id}` // Link to the intelligence center for this case
             });
 
             // Emit via WebSockets
-            const io = getIO();
+            const io = getIo();
             if (io) {
               io.emit("notification", notif);
               // Also emit a specific detective event for the real-time feed
