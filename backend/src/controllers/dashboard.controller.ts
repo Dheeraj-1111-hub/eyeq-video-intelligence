@@ -73,8 +73,8 @@ export const getDashboardMetrics = async (req: Request, res: Response) => {
       await axios.get(`${aiServiceUrl}/docs`, { timeout: 2000 });
       aiEngineStatus = "AI Engine Online";
       systemHealth = "Optimal";
-    } catch (err) {
-      console.log("AI Engine unreachable:", err);
+    } catch (err: any) {
+      console.log("AI Engine unreachable:", err.message || err);
     }
 
     // 4. Threat Alerts

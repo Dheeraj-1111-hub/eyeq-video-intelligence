@@ -170,7 +170,7 @@ export function CopilotWidget() {
                             className="w-full h-8 text-xs bg-white/5 hover:bg-brand-cyan/20 hover:text-brand-cyan border border-white/10 hover:border-brand-cyan/50"
                             onClick={() => {
                               navigate({ 
-                                to: '/', 
+                                to: '/analyze', 
                                 search: { 
                                   active: msg.match?.video_id, 
                                   t: msg.match?.timestamp_seconds 

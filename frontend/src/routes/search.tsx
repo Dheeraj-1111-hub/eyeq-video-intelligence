@@ -26,6 +26,7 @@ import { ResizableLayout } from "@/components/ui/custom-resizable";
 import { Meteors } from "@/components/ui/aceternity/meteors";
 import { MovingBorder } from "@/components/ui/aceternity/moving-border";
 import { AddToCaseModal } from "@/features/cases/components/AddToCaseModal";
+import { TrackSubjectButton } from "@/features/tracking/components/TrackSubjectButton";
 
 interface SearchResult {
   video_id: string;
@@ -551,13 +552,18 @@ function ResultCard({ result, index, onClick, onAddToCase }: { result: SearchRes
 
         {/* Play Overlay */}
         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
-          <div className="flex flex-col items-center gap-3">
-            <div className="h-12 w-12 rounded-full bg-brand-cyan text-black flex items-center justify-center shadow-[0_0_15px_var(--color-brand-cyan)] transform scale-90 group-hover:scale-100 transition-transform">
-              <Play className="h-5 w-5 translate-x-0.5" />
+          <div className="flex flex-col items-center gap-2 w-full px-8">
+            <div className="h-10 w-10 rounded-full bg-brand-cyan text-black flex items-center justify-center shadow-[0_0_15px_var(--color-brand-cyan)] transform scale-90 group-hover:scale-100 transition-transform mb-2">
+              <Play className="h-4 w-4 translate-x-0.5" />
             </div>
-            <Button size="sm" onClick={onAddToCase} className="bg-black/60 text-white border border-white/20 hover:bg-white/20 hover:border-white/40 h-7 text-[10px] uppercase font-bold tracking-wider">
+            <Button size="sm" onClick={onAddToCase} className="w-full bg-black/60 text-white border border-white/20 hover:bg-white/20 hover:border-white/40 h-7 text-[10px] uppercase font-bold tracking-wider">
               Add To Case
             </Button>
+            {result.label === "person" && (
+              <div onClick={(e) => e.stopPropagation()} className="w-full">
+                <TrackSubjectButton detectionId={result.detection_id} thumbnail={result.thumbnail} />
+              </div>
+            )}
           </div>
         </div>
       </div>

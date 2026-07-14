@@ -17,7 +17,7 @@ export const askAssistant = async (req: Request, res: Response): Promise<void> =
       query: message,
       mode: "semantic",
       top_k: 1, // Only get the best match for the assistant
-      semantic_threshold: 0.85 // Extremely high confidence to prevent hallucinations (like red car for white)
+      semantic_threshold: 0.30 // Lowered to allow matches for smaller objects in frame
     });
 
     const results = searchResponse.data;

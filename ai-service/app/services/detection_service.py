@@ -25,7 +25,6 @@ from PIL import Image
 load_dotenv()
 
 MONGODB_URI = os.environ["MONGODB_URI"]
-DB_NAME = "test"  # matches Mongoose default — change if your DB has a custom name
 
 # Shared detector instance (loaded once per process)
 _detector: YOLODetector | None = None
@@ -40,7 +39,7 @@ def get_detector() -> YOLODetector:
 
 def _get_db():
     client = MongoClient(MONGODB_URI)
-    return client[DB_NAME]
+    return client.get_default_database()
 
 
 def _fmt_timestamp(seconds: float) -> str:

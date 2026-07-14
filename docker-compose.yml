@@ -28,6 +28,7 @@ services:
       - ./uploads:/app/uploads # Share uploads folder for processing
     environment:
       - AI_SERVICE_PORT=8001
+      - MONGODB_URI=mongodb://mongodb:27017/video-intelligence
     restart: unless-stopped
     depends_on:
       - mongodb
@@ -44,7 +45,8 @@ services:
     environment:
       - PORT=5000
       - MONGODB_URI=mongodb://mongodb:27017/video-intelligence
-      - REDIS_URL=redis://redis:6379
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
       - AI_SERVICE_URL=http://ai-service:8001
       - JWT_SECRET=supersecretjwtkey_for_eyeq_production_deployment
     restart: unless-stopped

@@ -1,18 +1,21 @@
 import os
-from sentence_transformers import SentenceTransformer
+import torch
 from PIL import Image
+import clip
 
 class CLIPEncoder:
-    """Singleton wrapper for the CLIP model."""
+    """Singleton wrapper for the CLIP model using OpenAI's native library."""
     _instance = None
     _model = None
+    _preprocess = None
+    _device = "cpu"
 
     def __new__(cls):
         if cls._instance is None:
-            print("[AI] Initializing CLIPEncoder...")
+            print("[AI] Initializing CLIPEncoder via OpenAI CLIP...")
             cls._instance = super(CLIPEncoder, cls).__new__(cls)
-            # Use sentence-transformers' clip-ViT-B-32 wrapper
-            cls._model = SentenceTransformer('clip-ViT-B-32')
+            cls._device = "cuda" if torch.cuda.is_available() else "cpu"
+            cls._model, cls._preprocess = clip.load("ViT-B/32", device=cls._device)
             print("[AI] CLIPEncoder ready.")
         return cls._instance
 
@@ -25,11 +28,22 @@ class CLIPEncoder:
         # Convert BGR to RGB for PIL
         rgb_image = cv2.cvtColor(image_array, cv2.COLOR_BGR2RGB)
         pil_image = Image.fromarray(rgb_image)
-        # return list of floats
-        return self._model.encode(pil_image).tolist()
+        
+        image_input = self._preprocess(pil_image).unsqueeze(0).to(self._device)
+        with torch.no_grad():
+            image_features = self._model.encode_image(image_input)
+            # Normalize to match SentenceTransformer behavior if needed, but original code just tolist()
+            image_features /= image_features.norm(dim=-1, keepdim=True)
+            
+        return image_features.cpu().numpy()[0].tolist()
 
     def encode_text(self, text: str):
         """
         Encode text query to a 512D vector.
         """
-        return self._model.encode([text])[0].tolist()
+        text_input = clip.tokenize([text]).to(self._device)
+        with torch.no_grad():
+            text_features = self._model.encode_text(text_input)
+            text_features /= text_features.norm(dim=-1, keepdim=True)
+            
+        return text_features.cpu().numpy()[0].tolist()

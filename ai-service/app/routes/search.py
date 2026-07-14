@@ -122,13 +122,8 @@ def search_detections(request: SearchQuery):
         det_id = match["db_id"]
         score = match["score"]
         
-        # Filter noise: CLIP scores for this model typically cluster tightly.
-        # A raw score of 0.23 is usually noise/hallucination, while 0.28 is a very strong match.
-        if score < 0.23:
-            continue
-            
-        # Normalize CLIP score (0.23 -> 0.0, 0.28 -> 1.0) to match UI percentages
-        normalized_score = max(0.0, min(1.0, (score - 0.23) / 0.05))
+        # Normalize CLIP score (0.15 -> 0.0, 0.30 -> 1.0) to match UI percentages
+        normalized_score = max(0.0, min(1.0, (score - 0.15) / 0.15))
         
         # Apply semantic threshold from user settings
         if request.semantic_threshold and normalized_score < request.semantic_threshold:

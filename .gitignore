@@ -71,3 +71,5 @@ yarn-error.log*
 *.sqlite
 *.sqlite3
 *.db
+
+ai_logs.txt

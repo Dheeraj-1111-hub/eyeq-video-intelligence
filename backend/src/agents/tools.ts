@@ -37,7 +37,7 @@ export const getInvestigatorTools = (userId: string) => {
         try {
           const payload = {
             query,
-            semantic_threshold: min_confidence || 0.65,
+            semantic_threshold: min_confidence || 0.30,
             top_k: 10,
             start_hour,
             end_hour

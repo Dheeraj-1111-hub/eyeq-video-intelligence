@@ -99,10 +99,11 @@ export const searchDetections = async (req: Request, res: Response) => {
 
     return res.status(200).json(results);
   } catch (error: any) {
-    console.error("[SearchController] Error searching detections:", error.message);
+    const errorDetail = error.response?.data || error.message || error;
+    console.error("[SearchController] Error searching detections:", errorDetail);
     return res.status(500).json({
       error: "Failed to perform semantic search",
-      details: error.message,
+      details: errorDetail,
     });
   }
 };
