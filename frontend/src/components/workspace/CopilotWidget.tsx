@@ -88,7 +88,7 @@ export function CopilotWidget() {
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(true)}
         initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0, opacity: isOpen ? 0 : 1, pointerEvents: isOpen ? 'none' : 'auto' }}
+        animate={{ opacity: isOpen ? 0 : 1, y: 0, pointerEvents: isOpen ? 'none' : 'auto' }}
       >
         <MessageSquare className="w-6 h-6" />
       </motion.button>
